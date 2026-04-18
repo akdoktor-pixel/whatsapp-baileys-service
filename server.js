@@ -1,5 +1,4 @@
-const { makeWASocket, DisconnectReason } = require('@whiskeysockets/baileys');
-const { useMultiFileAuthState } = require('@whiskeysockets/baileys');
+const { makeWASocket, DisconnectReason, useMultiFileAuthState } = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode-terminal');
 const express = require('express');
 const pino = require('pino');
@@ -16,12 +15,17 @@ async function connectWhatsApp() {
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
         
         sock = makeWASocket({
-    auth: state,
-    logger: pino({ level: 'debug' }),
-    browser: ["Chrome", "Windows", "10.0.0"],
-    markOnlineOnConnect: true,
-    generateHighQualityLinkPreview: true,
-            });
+            auth: state,
+            logger: pino({ level: 'debug' }),
+            browser: ["Chrome", "Windows", "10.0.0"],
+            markOnlineOnConnect: true,
+            generateHighQualityLinkPreview: true,
+            printQRInTerminal: true,
+            connectTimeoutMs: 60000,
+            qrTimeout: 60000,
+            defaultQueryTimeoutMs: undefined,
+            keepAliveIntervalMs: 30000,
+        });
 
         sock.ev.on('connection.update', (update) => {
             console.log('Connection update:', JSON.stringify(update, null, 2));
@@ -82,7 +86,8 @@ app.get('/status', (req, res) => {
 });
 
 // Sunucuyu başlat
-app.listen(3000, () => {
-    console.log('WhatsApp service running on port 3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`WhatsApp service running on port ${PORT}`);
     connectWhatsApp();
 });
