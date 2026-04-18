@@ -2,12 +2,17 @@ const { makeWASocket, DisconnectReason, useMultiFileAuthState } = require('@whis
 const qrcode = require('qrcode-terminal');
 const express = require('express');
 const pino = require('pino');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 
 const app = express();
 app.use(express.json());
 
 let sock = null;
 let isConnected = false;
+
+// Proxy konfigürasyonu
+const proxyUrl = process.env.HTTP_PROXY || 'http://proxy.example.com:8080';
+const proxyAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
 
 // WhatsApp bağlantısı
 async function connectWhatsApp() {
@@ -25,6 +30,7 @@ async function connectWhatsApp() {
             qrTimeout: 60000,
             defaultQueryTimeoutMs: undefined,
             keepAliveIntervalMs: 30000,
+            agent: proxyAgent,
         });
 
         sock.ev.on('connection.update', (update) => {
